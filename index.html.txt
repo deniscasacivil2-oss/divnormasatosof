@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Olímpia 2026</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet.js (Mapas) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .sidebar { background-color: #003366; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15); border: 1px solid #e2e8f0; }
+        .nav-link { transition: all 0.2s; border-radius: 8px; }
+        .nav-link.active { background-color: #ffb800; color: #003366 !important; font-weight: 600; }
+        .text-navy { color: #003366; }
+        .text-gray-contrast { color: #475569; }
+        .section-content { display: none; }
+        .section-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .logo-container img { object-fit: contain; }
+        
+        /* Ocultar barras de rolagem nativas horizontais antigas */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Nova Barra de Rolagem Horizontal (Customizada) para tabelas e status */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Ajuste para a coluna Status preencher a célula */
+        .status-cell { height: 1px; padding: 0 !important; }
+        .status-cell > div { min-height: 100%; height: 100%; }
+        
+        /* Previne que o conteúdo interno do menu amasse quando encolhe */
+        .sidebar-content { min-width: 256px; }
+
+        /* Ajuste do z-index do mapa para não sobrepor o cabeçalho e menu */
+        .leaflet-container { z-index: 10 !important; font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- Menu Lateral com Width Dinâmico e Transição -->
+    <aside id="sidebar" class="sidebar text-white flex-shrink-0 flex flex-col transition-all duration-300 w-64 overflow-hidden h-screen sticky top-0 z-50">
+        <div class="sidebar-content flex flex-col h-full">
+            <div class="p-6 text-center border-b border-blue-900">
+                <div class="bg-white p-2 rounded-lg mb-4 inline-block logo-container shadow-lg">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Bras%C3%A3o_de_Ol%C3%ADmpia%2C_SP.jpg" alt="Brasão de Olímpia" class="h-16">
+                </div>
+                <h2 class="text-[10px] font-bold tracking-widest uppercase text-blue-100 leading-tight px-2">Acompanhamento de Projetos Legislativos</h2>
+            </div>
+            
+            <!-- Menu gerado dinamicamente via JS -->
+            <nav id="menu-lateral" class="flex-grow p-4 space-y-2 mt-4 overflow-y-auto no-scrollbar">
+                <div class="animate-pulse flex items-center space-x-3 p-3">
+                    <div class="rounded-full bg-blue-800 h-6 w-6"></div>
+                    <div class="h-4 bg-blue-800 rounded w-3/4"></div>
+                </div>
+            </nav>
+
+            <div class="p-6 bg-blue-950 text-[10px] text-blue-300 mt-auto border-t border-blue-900">
+                <p class="font-bold">Divisão de Normas e Atos Oficiais</p>
+                <p>Casa Civil | Município de Olímpia - SP</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-grow flex flex-col min-w-0 w-full">
+        <header class="bg-white border-b h-16 flex items-center justify-between px-8 sticky top-0 z-40 shadow-sm">
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleSidebar()" class="text-navy hover:text-blue-600 transition-colors focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 id="page-title" class="text-xl font-bold text-navy uppercase tracking-tight">Carregando...</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="bg-blue-100 text-navy px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Ano 2026</span>
+                <div class="h-8 w-8 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-xs shadow-md border-2 border-gold">OP</div>
+            </div>
+        </header>
+
+        <!-- Seções geradas dinamicamente via JS -->
+        <div id="conteiner-secoes" class="p-4 md:p-8 w-full mx-auto max-w-[1400px]">
+            <div class="flex flex-col items-center justify-center h-64 text-navy mt-20">
+                <i class="fa-solid fa-spinner fa-spin text-5xl mb-4 text-gold"></i>
+                <h2 class="text-xl font-bold uppercase tracking-widest">Sincronizando Dados</h2>
+                <p class="text-sm text-gray-500 mt-2">Construindo painéis a partir da nuvem...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Gestão Retrátil do Menu
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('w-64')) {
+                sidebar.classList.replace('w-64', 'w-0');
+            } else {
+                sidebar.classList.replace('w-0', 'w-64');
+            }
+        }
+
+        // Integração com Google Sheets
+        const url = 'https://script.google.com/macros/s/AKfycbzEdNDz9fw0wrfHeMy4lEnV5F2-bP36gug4grRlvKspw_p8Dw9J6HiY92NBrpk6chGLng/exec';
+
+        // Função global para alternar abas
+        window.showSection = function(sectionId, element, titulo) {
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.section-content').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            document.getElementById('page-title').innerText = titulo;
+            
+            // Recalcula o tamanho do mapa caso exista na aba atual (para evitar que o mapa carregue quebrado em abas escondidas)
+            if (window.appMaps && window.appMaps[sectionId]) {
+                setTimeout(() => {
+                    window.appMaps[sectionId].invalidateSize();
+                }, 50);
+            }
+
+            // Em ecrãs móveis, recolhe o menu automaticamente ao clicar numa aba
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.replace('w-64', 'w-0');
+            }
+        }
+
+        // --- SUPER EXTRATOR DE NÚMEROS (Trata R$, milhares com ponto, decimais) ---
+        window.parseDinheiro = function(valor) {
+            if (valor === null || valor === undefined || valor === '') return 0;
+            if (typeof valor === 'number') return valor;
+            let vStr = String(valor).trim();
+            
+            // Remove símbolo de moeda e espaços
+            vStr = vStr.replace(/[R$\s]/gi, '');
+            
+            // Se tiver vírgula, tratamos como padrão BR (1.500.000,00)
+            if (vStr.includes(',')) {
+                vStr = vStr.replace(/\./g, '').replace(',', '.');
+            } else {
+                // Se não tem vírgula, mas tem múltiplos pontos (1.500.000), os pontos são milhares
+                if ((vStr.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(vStr)) {
+                    vStr = vStr.replace(/\./g, '');
+                }
+            }
+            
+            // Retira o que sobrar de lixo e converte em número real
+            let num = parseFloat(vStr.replace(/[^\d.-]/g, ''));
+            return isNaN(num) ? 0 : num;
+        }
+
+        // --- FUNÇÕES NOVAS PARA O MAPA DINÂMICO ---
+        window.parseCoordinates = function(coordStr) {
+            if (!coordStr) return null;
+            let simpleMatch = coordStr.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+            if (simpleMatch) return [parseFloat(simpleMatch[1]), parseFloat(simpleMatch[2])];
+            let urlMatch = coordStr.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (urlMatch) return [parseFloat(urlMatch[1]), parseFloat(urlMatch[2])];
+            let qMatch = coordStr.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (qMatch) return [parseFloat(qMatch[1]), parseFloat(qMatch[2])];
+            return null;
+        }
+
+        window.focarNoMapa = function(idSecao, lat, lng) {
+            if (window.appMaps && window.appMaps[idSecao]) {
+                const map = window.appMaps[idSecao];
+                // Faz a câmera voar suavemente até o local
+                map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
+                
+                // Aguarda o voo terminar (1.5s) e abre a etiqueta de nome do imóvel
+                if (window.appMarkers && window.appMarkers[`${idSecao}_${lat}_${lng}`]) {
+                    setTimeout(() => {
+                        window.appMarkers[`${idSecao}_${lat}_${lng}`].openPopup();
+                    }, 1500); 
+                }
+            }
+        }
+
+        async function carregarDados() {
+            try {
+                // Adicionadas regras rigorosas de CORS e Redirecionamento
+                const resposta = await fetch(url, { 
+                    method: 'GET',
+                    mode: 'cors',
+                    redirect: 'follow' 
+                });
+                const textoResposta = await resposta.text();
+                
+                let dadosBrutos;
+                try {
+                    dadosBrutos = JSON.parse(textoResposta);
+                } catch (parseErro) {
+                    throw new Error("O Google Script retornou HTML em vez de JSON. Verifique as permissões de implantação.");
+                }
+                
+                let dadosCompletos = Array.isArray(dadosBrutos) ? dadosBrutos : [dadosBrutos];
+
+                // Identifica e guarda a linha de "Total" para exibir apenas onde for necessário
+                let linhaTotal = dadosCompletos.find(linha => {
+                    const valImovel = String(linha['IMÓVEL'] || '').toUpperCase().trim();
+                    const valOrdem = String(linha['ORDEM'] || linha['Ordem'] || '').toUpperCase().trim();
+                    // Refinamento: Só oculta se for exatamente 'TOTAL' ou começar com 'TOTAL ' (com espaço), protegendo imóveis chamados 'TOTAL VILLE'
+                    return valImovel === 'TOTAL' || valImovel.startsWith('TOTAL ') || valImovel.startsWith('TOTAL:') || valOrdem === 'TOTAL';
+                });
+
+                // Cria o array de dados principais sem a linha de Total (para não quebrar contagens e gráficos)
+                let dados = dadosCompletos.filter(linha => linha !== linhaTotal);
+
+                if (dados.length > 0) {
+                    const menuLateral = document.getElementById('menu-lateral');
+                    const conteinerSecoes = document.getElementById('conteiner-secoes');
+
+                    menuLateral.innerHTML = '';
+                    conteinerSecoes.innerHTML = '';
+
+                    const todasColunas = Object.keys(dados[0]);
+                    
+                    // --- NOVA LÓGICA DE MENUS LEGISLATIVOS ---
+                    const menusSolicitados = [
+                        { nome: 'PROJETO DE LEI', icone: 'fa-file-lines' },
+                        { nome: 'PROJETO DE LEI COMPLEMENTAR', icone: 'fa-file-circle-plus' },
+                        { nome: 'PROJETO DE EMENDA A LEI ORGÂNICA', icone: 'fa-book-open' }
+                    ];
+
+                    let chartsToInit = [];
+
+                    // Função auxiliar para analisar os status de uma lista de projetos
+                    const analisarStatus = (lista) => {
+                        let stats = { total: lista.length, aprovado: 0, rejeitado: 0, tramite: 0, deliberacao: 0, disc1: 0, disc2: 0 };
+                        
+                        // Busca RESTRITA APENAS às colunas "Status Final" e "Trâmite na Câmara"
+                        let colunasStatus = todasColunas.filter(c => {
+                            let cUpper = c.toUpperCase().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U').trim();
+                            return cUpper === 'STATUS FINAL' || cUpper === 'TRAMITE NA CAMARA' || cUpper.includes('TRAMITE NA CAMARA');
+                        });
+                        
+                        if (colunasStatus.length > 0) {
+                            lista.forEach(r => {
+                                // Junta o texto destas duas colunas específicas para análise
+                                let valCombinado = colunasStatus.map(c => String(r[c] || '').toLowerCase().trim()).join(' ');
+                                
+                                if (!valCombinado || valCombinado.replace(/-/g, '').trim() === '') return;
+
+                                let isAprovado = valCombinado.includes('aprovado') || valCombinado.includes('sancionado') || valCombinado.includes('promulgado') || valCombinado.includes('ok');
+                                let isRejeitado = valCombinado.includes('rejeitado') || valCombinado.includes('arquivado') || valCombinado.includes('vetado');
+                                
+                                // Focado em 1ª e 2ª (mas mantendo o fallback por precaução)
+                                let isDeliberacao = valCombinado.includes('delibera') || valCombinado.includes('leitura');
+                                let is1a = valCombinado.includes('1ª') || valCombinado.includes('1a') || valCombinado.includes('1º') || valCombinado.includes('1°') || valCombinado.includes('primeira');
+                                let is2a = valCombinado.includes('2ª') || valCombinado.includes('2a') || valCombinado.includes('2º') || valCombinado.includes('2°') || valCombinado.includes('segunda');
+
+                                if (isAprovado) stats.aprovado++;
+                                else if (isRejeitado) stats.rejeitado++;
+                                else stats.tramite++; // Se tem status válido e não foi aprovado nem rejeitado, está em trâmite.
+
+                                // Fases específicas de discussão
+                                if (isDeliberacao) stats.deliberacao++;
+                                if (is1a) stats.disc1++;
+                                if (is2a) stats.disc2++;
+                            });
+                        }
+                        return stats;
+                    };
+
+                    menusSolicitados.forEach((menu, index) => {
+                        const idSecao = 'secao-leg-' + index;
+
+                        // Criar o link no menu lateral
+                        menuLateral.innerHTML += `
+                            <a href="#" onclick="showSection('${idSecao}', this, '${menu.nome}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                                <i class="fa-solid ${menu.icone} w-6 text-center"></i>
+                                <span class="truncate text-[11px] font-bold tracking-wider uppercase">${menu.nome}</span>
+                            </a>
+                        `;
+
+                        let dadosFiltrados = dados.filter(row => {
+                            let isMatch = false;
+                            
+                            // Estratégia 1: Checa se há uma coluna dedicada para este tipo (ex: coluna "PROJETO DE LEI")
+                            // e se a linha possui algum conteúdo preenchido nela.
+                            let colunasDoMenuAtual = todasColunas.filter(c => {
+                                let cUpper = c.toUpperCase().trim().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U');
+                                if (menu.nome === 'PROJETO DE LEI') return cUpper === 'PROJETO DE LEI' || cUpper === 'PROJETOS DE LEI' || cUpper === 'PL' || cUpper === 'PLS';
+                                if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') return cUpper.includes('COMPLEMENTAR') || cUpper === 'PLC';
+                                if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') return (cUpper.includes('EMENDA') && cUpper.includes('ORGANICA')) || cUpper === 'PELO';
+                                return false;
+                            });
+
+                            colunasDoMenuAtual.forEach(colName => {
+                                let val = String(row[colName]).trim();
+                                if (val !== '' && val !== '-' && val.toLowerCase() !== 'n/a' && val.toLowerCase() !== 'não' && val.toLowerCase() !== 'nao') {
+                                    isMatch = true;
+                                }
+                            });
+
+                            // Estratégia 2: Checa se os valores das células têm as siglas ou nomes (Ex: "PL 01/2026")
+                            if (!isMatch) {
+                                Object.values(row).forEach(val => {
+                                    let v = String(val).toUpperCase().trim();
+                                    if (menu.nome === 'PROJETO DE LEI') {
+                                        // ^PL\b pega "PL", "PL 12", "PL-12", mas evita pegar PLC
+                                        if (/^PL\b/.test(v) || (v.includes('PROJETO DE LEI') && !v.includes('COMPLEMENTAR'))) isMatch = true;
+                                    } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
+                                        if (/^PLC\b/.test(v) || v.includes('PROJETO DE LEI COMPLEMENTAR') || v.includes('PL COMPLEMENTAR') || v.includes('COMPLEMENTAR')) isMatch = true;
+                                    } else if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') {
+                                        if (/^PELO\b/.test(v) || (v.includes('EMENDA') && (v.includes('ORGÂNICA') || v.includes('ORGANICA')))) isMatch = true;
+                                    }
+                                });
+                            }
+                            return isMatch;
+                        });
+
+                        // Preparar Colunas da Tabela (Ocultando colunas de outras categorias)
+                        let colunasExibir = todasColunas.filter(c => {
+                            if (c.trim() === '') return false;
+                            
+                            // Removemos acentos para garantir que a comparação funcione mesmo se a planilha mudar
+                            let cUpper = c.toUpperCase().trim().replace(/À/g, 'A').replace(/Â/g, 'A');
+                            
+                            // Lista de termos associados a cada menu
+                            let termosPL = ['PROJETO DE LEI', 'PL'];
+                            let termosPLC = ['PROJETO DE LEI COMPLEMENTAR', 'PLC', 'PL COMPLEMENTAR'];
+                            let termosPELO = ['PROJETO DE EMENDA A LEI ORGANICA', 'PELO'];
+
+                            // Lógica de exclusão cruzada
+                            if (menu.nome === 'PROJETO DE LEI') {
+                                if (termosPLC.includes(cUpper) || termosPELO.includes(cUpper)) return false;
+                            } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
+                                if (termosPL.includes(cUpper) || termosPELO.includes(cUpper)) return false;
+                            } else if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') {
+                                if (termosPL.includes(cUpper) || termosPLC.includes(cUpper)) return false;
+                            }
+                            
+                            return true;
+                        });
+                        
+                        let headerHtml = colunasExibir.map(c => {
+                            let cUpper = c.toUpperCase().trim();
+                            let bgClass = (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') ? 'bg-blue-200 text-navy font-black border-blue-300 text-center' : 'bg-gray-200 text-black border-gray-300 text-left';
+                            return `<th class="p-3 ${bgClass} border-r min-w-[150px] max-w-[300px] uppercase text-[10px] tracking-wider sticky top-0 z-10">${c}</th>`;
+                        }).join('');
+
+                        let rowsHtml = dadosFiltrados.map((row, idx) => {
+                            let colsHtml = colunasExibir.map(c => {
+                                let val = row[c] || '-';
+                                let cUpper = c.toUpperCase().trim();
+                                let alignText = 'text-left';
+                                let extraClasses = '';
+
+                                // Se for a coluna da sigla (PL, PLC, PELO), dá um destaque de formatação
+                                if (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') {
+                                    alignText = 'text-center';
+                                    extraClasses = 'font-bold text-navy bg-blue-50/50 text-sm';
+                                }
+                                
+                                // Colorização semântica para status/situação
+                                if (cUpper.includes('STATUS') || cUpper.includes('SITUAÇÃO') || cUpper.includes('TRAMITAÇÃO')) {
+                                    let bg = 'text-gray-600 font-bold';
+                                    let vLower = String(val).toLowerCase();
+                                    if (vLower.includes('aprovado') || vLower.includes('sancionado') || vLower.includes('ok')) bg = 'text-green-700 bg-green-100 px-2 py-1 rounded shadow-sm';
+                                    else if (vLower.includes('andamento') || vLower.includes('tramitando') || vLower.includes('comissão')) bg = 'text-blue-700 bg-blue-100 px-2 py-1 rounded shadow-sm';
+                                    else if (vLower.includes('arquivado') || vLower.includes('rejeitado') || vLower.includes('vetado')) bg = 'text-red-700 bg-red-100 px-2 py-1 rounded shadow-sm';
+                                    else if (vLower.includes('aguardando') || vLower.includes('pendente')) bg = 'text-orange-700 bg-orange-100 px-2 py-1 rounded shadow-sm';
+                                    val = `<span class="text-[10px] uppercase tracking-wider inline-block ${bg}">${val}</span>`;
+                        } else if (String(val).length > 100) {
+                            val = `<div class="max-h-20 overflow-y-auto custom-scrollbar pr-2" title="${val}">${val}</div>`;
+                        }
+                                
+                                return `<td class="p-3 text-gray-700 text-xs border-r border-gray-200 align-top min-w-[150px] max-w-[350px] whitespace-normal break-words ${alignText} ${extraClasses}">${val}</td>`;
+                            }).join('');
+                            return `<tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'}">${colsHtml}</tr>`;
+                        }).join('');
+
+                        if (dadosFiltrados.length === 0) {
+                            rowsHtml = `<tr><td colspan="${colunasExibir.length}" class="p-8 text-center text-gray-500 italic"><i class="fa-solid fa-inbox text-3xl mb-3 text-gray-300 block"></i>Nenhum projeto encontrado para esta classificação.<br>Verifique se os dados na planilha contêm as siglas ou termos correspondentes (ex: PL, PLC, PELO).</td></tr>`;
+                        }
+
+                        // Analisar os status da aba atual para gerar Cards e Gráficos
+                        let statsMenu = analisarStatus(dadosFiltrados);
+
+                        // Inserir os gráficos na fila de renderização
+                        chartsToInit.push({
+                            id: `chart-macro-${idSecao}`, type: 'pie',
+                            labels: ['Aprovados', 'Em Trâmite', 'Rejeitados'],
+                            values: [statsMenu.aprovado, statsMenu.tramite, statsMenu.rejeitado],
+                            colors: ['#16a34a', '#3b82f6', '#ef4444']
+                        });
+                        chartsToInit.push({
+                            id: `chart-fases-${idSecao}`, type: 'pie',
+                            labels: ['Deliberação', '1ª Discussão', '2ª Discussão'],
+                            values: [statsMenu.deliberacao, statsMenu.disc1, statsMenu.disc2],
+                            colors: ['#a855f7', '#f97316', '#14b8a6']
+                        });
+
+                        conteinerSecoes.innerHTML += `
+                            <section id="${idSecao}" class="section-content">
+                                <!-- Cards Superiores (7 Métricas) -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-8">
+                                    <div class="card p-3 border-l-4 border-navy shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate" title="Total - ${menu.nome}">Total - ${menu.nome.replace('PROJETO DE', 'P.')}</p>
+                                        <h3 class="text-2xl font-black text-navy mt-1">${statsMenu.total}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-green-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Aprovados</p>
+                                        <h3 class="text-2xl font-black text-green-600 mt-1">${statsMenu.aprovado}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-red-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Rejeitados</p>
+                                        <h3 class="text-2xl font-black text-red-600 mt-1">${statsMenu.rejeitado}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-blue-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Em Trâmite</p>
+                                        <h3 class="text-2xl font-black text-blue-600 mt-1">${statsMenu.tramite}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-purple-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Deliberação</p>
+                                        <h3 class="text-2xl font-black text-purple-600 mt-1">${statsMenu.deliberacao}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-orange-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">1ª Discussão</p>
+                                        <h3 class="text-2xl font-black text-orange-600 mt-1">${statsMenu.disc1}</h3>
+                                    </div>
+                                    <div class="card p-3 border-l-4 border-teal-500 shadow-sm bg-white">
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">2ª Discussão</p>
+                                        <h3 class="text-2xl font-black text-teal-600 mt-1">${statsMenu.disc2}</h3>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-8">
+                                    <div class="card overflow-hidden shadow-md bg-white border border-gray-300 w-full">
+                                        <div class="overflow-x-auto custom-scrollbar w-full max-h-[600px] overflow-y-auto relative">
+                                            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+                                                <thead class="shadow-sm bg-white">
+                                                    <tr>${headerHtml}</tr>
+                                                </thead>
+                                                <tbody class="text-gray-800 font-medium">
+                                                    ${rowsHtml}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bloco Inferior de Gráficos (Lado a Lado) -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                        <div class="card p-6 flex flex-col items-center justify-center shadow-md border-t-4 border-navy">
+                                            <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 w-full text-center">Situação Geral</h4>
+                                            <div class="h-64 w-full relative">
+                                                <canvas id="chart-macro-${idSecao}"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="card p-6 flex flex-col items-center justify-center shadow-md border-t-4 border-gold">
+                                            <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 w-full text-center">Fases de Trâmite</h4>
+                                            <div class="h-64 w-full relative">
+                                                <canvas id="chart-fases-${idSecao}"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        `;
+                    });
+
+                    // Ativa a primeira aba do menu
+                    const primeiroLink = document.querySelector('.nav-link');
+                    if (primeiroLink) { primeiroLink.click(); }
+
+                    // Renderizar gráficos novos
+                    chartsToInit.forEach(chartData => {
+                        const canvas = document.getElementById(chartData.id);
+                        if (canvas) {
+                            // Verifica se todos os valores estão zerados para mostrar um gráfico cinza amigável
+                            const sumValues = chartData.values.reduce((a, b) => a + b, 0);
+                            if (sumValues === 0) {
+                                chartData.labels = ['Nenhum registro nesta fase'];
+                                chartData.values = [1];
+                                chartData.colors = ['#e2e8f0'];
+                            }
+
+                            new Chart(canvas.getContext('2d'), {
+                                type: chartData.type,
+                                data: {
+                                    labels: chartData.labels,
+                                    datasets: [{
+                                        data: chartData.values,
+                                        backgroundColor: chartData.colors,
+                                        borderWidth: 2,
+                                        borderColor: '#ffffff',
+                                        hoverOffset: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true, maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { 
+                                            position: 'bottom', 
+                                            labels: { font: { family: "'Poppins', sans-serif", size: 10, weight: '600' }, padding: 15, usePointStyle: true } 
+                                        },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(0, 51, 102, 0.95)', titleFont: { family: "'Poppins', sans-serif", size: 12, weight: 'bold' }, bodyFont: { family: "'Poppins', sans-serif", size: 11 }, padding: 10, cornerRadius: 8,
+                                            callbacks: {
+                                                label: function(context) {
+                                                    if (sumValues === 0) return ' Sem dados no momento';
+                                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                    const porcentagem = ((context.raw / total) * 100).toFixed(1);
+                                                    return [` ${context.raw} Projeto(s)`, ` Representa: ${porcentagem}%`];
+                                                }
+                                            }
+                                        }
+                                    },
+                                    cutout: '50%' // Deixa o gráfico de pizza com um buraco no meio (Doughnut) para ficar mais moderno, caso prefira pizza cheia mude para '0%'
+                                }
+                            });
+                        }
+                    });
+
+                }
+            } catch (erro) {
+                console.error("Erro ao processar dados:", erro);
+                
+                let mensagemAjuda = "Verifique a URL e as permissões do Apps Script no Google.";
+                if (erro.message.includes("Failed to fetch") || erro.name === "TypeError") {
+                    mensagemAjuda = "O navegador bloqueou a conexão por segurança (Erro de CORS). Isso ocorre quase sempre porque a sua planilha exige login do Google para ser lida.";
+                }
+
+                document.getElementById('conteiner-secoes').innerHTML = `
+                    <div class="text-center p-10 card w-full max-w-2xl mx-auto mt-10 shadow-lg border-t-4 border-red-500">
+                        <i class="fa-solid fa-user-lock text-red-500 text-5xl mb-4"></i>
+                        <h2 class="text-xl font-bold text-navy uppercase tracking-widest">Acesso Negado aos Dados</h2>
+                        <p class="text-gray-600 mt-2 text-sm">${mensagemAjuda}</p>
+                        
+                        <div class="mt-8 bg-blue-50/50 p-6 rounded-lg text-left text-sm text-gray-800 border border-blue-100">
+                            <h3 class="font-bold text-navy mb-4 uppercase tracking-wider text-xs"><i class="fa-solid fa-wrench mr-2"></i>Como resolver no Google Sheets:</h3>
+                            <ol class="list-decimal pl-5 space-y-3 font-medium text-gray-700">
+                                <li>Abra sua planilha e vá em <b>Extensões > Apps Script</b>.</li>
+                                <li>No canto superior direito, clique em <b>Implantar > Nova implantação</b>.</li>
+                                <li>No campo <b class="text-red-600 bg-red-50 px-1 rounded">Quem tem acesso</b>, certifique-se de mudar para <b class="text-red-600 bg-red-50 px-1 rounded">Qualquer pessoa</b> (Não use "Qualquer pessoa com Conta do Google").</li>
+                                <li>Clique em <b>Implantar</b>.</li>
+                                <li>Copie o novo link gerado e substitua na variável <code>url</code> dentro do código deste painel.</li>
+                            </ol>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.onload = carregarDados;
+    </script>
+</body>
+</html>
