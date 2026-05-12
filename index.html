@@ -104,7 +104,19 @@
     </main>
 
     <script>
-        // Gestão Retrátil do Menu
+        function sanitizeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, function(match) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[match];
+            });
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (sidebar.classList.contains('w-64')) {
@@ -114,10 +126,8 @@
             }
         }
 
-        // Integração com Google Sheets
         const url = 'https://script.google.com/macros/s/AKfycbzEdNDz9fw0wrfHeMy4lEnV5F2-bP36gug4grRlvKspw_p8Dw9J6HiY92NBrpk6chGLng/exec';
 
-        // Função global para alternar abas
         window.showSection = function(sectionId, element, titulo) {
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             element.classList.add('active');
@@ -127,44 +137,36 @@
 
             document.getElementById('page-title').innerText = titulo;
             
-            // Recalcula o tamanho do mapa caso exista na aba atual (para evitar que o mapa carregue quebrado em abas escondidas)
             if (window.appMaps && window.appMaps[sectionId]) {
                 setTimeout(() => {
                     window.appMaps[sectionId].invalidateSize();
                 }, 50);
             }
 
-            // Em ecrãs móveis, recolhe o menu automaticamente ao clicar numa aba
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.replace('w-64', 'w-0');
             }
         }
 
-        // --- SUPER EXTRATOR DE NÚMEROS (Trata R$, milhares com ponto, decimais) ---
         window.parseDinheiro = function(valor) {
             if (valor === null || valor === undefined || valor === '') return 0;
             if (typeof valor === 'number') return valor;
             let vStr = String(valor).trim();
             
-            // Remove símbolo de moeda e espaços
             vStr = vStr.replace(/[R$\s]/gi, '');
             
-            // Se tiver vírgula, tratamos como padrão BR (1.500.000,00)
             if (vStr.includes(',')) {
                 vStr = vStr.replace(/\./g, '').replace(',', '.');
             } else {
-                // Se não tem vírgula, mas tem múltiplos pontos (1.500.000), os pontos são milhares
                 if ((vStr.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(vStr)) {
                     vStr = vStr.replace(/\./g, '');
                 }
             }
             
-            // Retira o que sobrar de lixo e converte em número real
             let num = parseFloat(vStr.replace(/[^\d.-]/g, ''));
             return isNaN(num) ? 0 : num;
         }
 
-        // --- FUNÇÕES NOVAS PARA O MAPA DINÂMICO ---
         window.parseCoordinates = function(coordStr) {
             if (!coordStr) return null;
             let simpleMatch = coordStr.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
@@ -179,10 +181,8 @@
         window.focarNoMapa = function(idSecao, lat, lng) {
             if (window.appMaps && window.appMaps[idSecao]) {
                 const map = window.appMaps[idSecao];
-                // Faz a câmera voar suavemente até o local
                 map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
                 
-                // Aguarda o voo terminar (1.5s) e abre a etiqueta de nome do imóvel
                 if (window.appMarkers && window.appMarkers[`${idSecao}_${lat}_${lng}`]) {
                     setTimeout(() => {
                         window.appMarkers[`${idSecao}_${lat}_${lng}`].openPopup();
@@ -193,7 +193,6 @@
 
         async function carregarDados() {
             try {
-                // Adicionadas regras rigorosas de CORS e Redirecionamento
                 const resposta = await fetch(url, { 
                     method: 'GET',
                     mode: 'cors',
@@ -205,20 +204,17 @@
                 try {
                     dadosBrutos = JSON.parse(textoResposta);
                 } catch (parseErro) {
-                    throw new Error("O Google Script retornou HTML em vez de JSON. Verifique as permissões de implantação.");
+                    throw new Error("Invalid response payload.");
                 }
                 
                 let dadosCompletos = Array.isArray(dadosBrutos) ? dadosBrutos : [dadosBrutos];
 
-                // Identifica e guarda a linha de "Total" para exibir apenas onde for necessário
                 let linhaTotal = dadosCompletos.find(linha => {
                     const valImovel = String(linha['IMÓVEL'] || '').toUpperCase().trim();
                     const valOrdem = String(linha['ORDEM'] || linha['Ordem'] || '').toUpperCase().trim();
-                    // Refinamento: Só oculta se for exatamente 'TOTAL' ou começar com 'TOTAL ' (com espaço), protegendo imóveis chamados 'TOTAL VILLE'
                     return valImovel === 'TOTAL' || valImovel.startsWith('TOTAL ') || valImovel.startsWith('TOTAL:') || valOrdem === 'TOTAL';
                 });
 
-                // Cria o array de dados principais sem a linha de Total (para não quebrar contagens e gráficos)
                 let dados = dadosCompletos.filter(linha => linha !== linhaTotal);
 
                 if (dados.length > 0) {
@@ -228,9 +224,8 @@
                     menuLateral.innerHTML = '';
                     conteinerSecoes.innerHTML = '';
 
-                    const todasColunas = Object.keys(dados[0]);
+                    const todasColunas = Object.keys(dados[0]).map(c => sanitizeHTML(c));
                     
-                    // --- NOVA LÓGICA DE MENUS LEGISLATIVOS ---
                     const menusSolicitados = [
                         { nome: 'PROJETO DE LEI', icone: 'fa-file-lines' },
                         { nome: 'PROJETO DE LEI COMPLEMENTAR', icone: 'fa-file-circle-plus' },
@@ -239,19 +234,16 @@
 
                     let chartsToInit = [];
 
-                    // Função auxiliar para analisar os status de uma lista de projetos
                     const analisarStatus = (lista) => {
                         let stats = { total: lista.length, aprovado: 0, rejeitado: 0, tramite: 0, deliberacao: 0, disc1: 0, disc2: 0 };
                         
-                        // Busca RESTRITA APENAS às colunas "Status Final" e "Trâmite na Câmara"
                         let colunasStatus = todasColunas.filter(c => {
                             let cUpper = c.toUpperCase().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U').trim();
-                            return cUpper === 'STATUS FINAL' || cUpper === 'TRAMITE NA CAMARA' || cUpper.includes('TRAMITE NA CAMARA');
+                            return cUpper === 'STATUS FINAL' || cUpper === 'TRAMITE NA CAMARA';
                         });
                         
                         if (colunasStatus.length > 0) {
                             lista.forEach(r => {
-                                // Junta o texto destas duas colunas específicas para análise
                                 let valCombinado = colunasStatus.map(c => String(r[c] || '').toLowerCase().trim()).join(' ');
                                 
                                 if (!valCombinado || valCombinado.replace(/-/g, '').trim() === '') return;
@@ -259,16 +251,14 @@
                                 let isAprovado = valCombinado.includes('aprovado') || valCombinado.includes('sancionado') || valCombinado.includes('promulgado') || valCombinado.includes('ok');
                                 let isRejeitado = valCombinado.includes('rejeitado') || valCombinado.includes('arquivado') || valCombinado.includes('vetado');
                                 
-                                // Focado em 1ª e 2ª (mas mantendo o fallback por precaução)
                                 let isDeliberacao = valCombinado.includes('delibera') || valCombinado.includes('leitura');
                                 let is1a = valCombinado.includes('1ª') || valCombinado.includes('1a') || valCombinado.includes('1º') || valCombinado.includes('1°') || valCombinado.includes('primeira');
                                 let is2a = valCombinado.includes('2ª') || valCombinado.includes('2a') || valCombinado.includes('2º') || valCombinado.includes('2°') || valCombinado.includes('segunda');
 
                                 if (isAprovado) stats.aprovado++;
                                 else if (isRejeitado) stats.rejeitado++;
-                                else stats.tramite++; // Se tem status válido e não foi aprovado nem rejeitado, está em trâmite.
+                                else stats.tramite++; 
 
-                                // Fases específicas de discussão
                                 if (isDeliberacao) stats.deliberacao++;
                                 if (is1a) stats.disc1++;
                                 if (is2a) stats.disc2++;
@@ -280,19 +270,16 @@
                     menusSolicitados.forEach((menu, index) => {
                         const idSecao = 'secao-leg-' + index;
 
-                        // Criar o link no menu lateral
                         menuLateral.innerHTML += `
-                            <a href="#" onclick="showSection('${idSecao}', this, '${menu.nome}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                            <a href="#" onclick="showSection('${idSecao}', this, '${sanitizeHTML(menu.nome)}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
                                 <i class="fa-solid ${menu.icone} w-6 text-center"></i>
-                                <span class="truncate text-[11px] font-bold tracking-wider uppercase">${menu.nome}</span>
+                                <span class="truncate text-[11px] font-bold tracking-wider uppercase">${sanitizeHTML(menu.nome)}</span>
                             </a>
                         `;
 
                         let dadosFiltrados = dados.filter(row => {
                             let isMatch = false;
                             
-                            // Estratégia 1: Checa se há uma coluna dedicada para este tipo (ex: coluna "PROJETO DE LEI")
-                            // e se a linha possui algum conteúdo preenchido nela.
                             let colunasDoMenuAtual = todasColunas.filter(c => {
                                 let cUpper = c.toUpperCase().trim().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U');
                                 if (menu.nome === 'PROJETO DE LEI') return cUpper === 'PROJETO DE LEI' || cUpper === 'PROJETOS DE LEI' || cUpper === 'PL' || cUpper === 'PLS';
@@ -302,18 +289,16 @@
                             });
 
                             colunasDoMenuAtual.forEach(colName => {
-                                let val = String(row[colName]).trim();
+                                let val = String(row[colName] || '').trim();
                                 if (val !== '' && val !== '-' && val.toLowerCase() !== 'n/a' && val.toLowerCase() !== 'não' && val.toLowerCase() !== 'nao') {
                                     isMatch = true;
                                 }
                             });
 
-                            // Estratégia 2: Checa se os valores das células têm as siglas ou nomes (Ex: "PL 01/2026")
                             if (!isMatch) {
                                 Object.values(row).forEach(val => {
-                                    let v = String(val).toUpperCase().trim();
+                                    let v = String(val || '').toUpperCase().trim();
                                     if (menu.nome === 'PROJETO DE LEI') {
-                                        // ^PL\b pega "PL", "PL 12", "PL-12", mas evita pegar PLC
                                         if (/^PL\b/.test(v) || (v.includes('PROJETO DE LEI') && !v.includes('COMPLEMENTAR'))) isMatch = true;
                                     } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
                                         if (/^PLC\b/.test(v) || v.includes('PROJETO DE LEI COMPLEMENTAR') || v.includes('PL COMPLEMENTAR') || v.includes('COMPLEMENTAR')) isMatch = true;
@@ -325,19 +310,15 @@
                             return isMatch;
                         });
 
-                        // Preparar Colunas da Tabela (Ocultando colunas de outras categorias)
                         let colunasExibir = todasColunas.filter(c => {
                             if (c.trim() === '') return false;
                             
-                            // Removemos acentos para garantir que a comparação funcione mesmo se a planilha mudar
                             let cUpper = c.toUpperCase().trim().replace(/À/g, 'A').replace(/Â/g, 'A');
                             
-                            // Lista de termos associados a cada menu
                             let termosPL = ['PROJETO DE LEI', 'PL'];
                             let termosPLC = ['PROJETO DE LEI COMPLEMENTAR', 'PLC', 'PL COMPLEMENTAR'];
                             let termosPELO = ['PROJETO DE EMENDA A LEI ORGANICA', 'PELO'];
 
-                            // Lógica de exclusão cruzada
                             if (menu.nome === 'PROJETO DE LEI') {
                                 if (termosPLC.includes(cUpper) || termosPELO.includes(cUpper)) return false;
                             } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
@@ -352,26 +333,25 @@
                         let headerHtml = colunasExibir.map(c => {
                             let cUpper = c.toUpperCase().trim();
                             let bgClass = (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') ? 'bg-blue-200 text-navy font-black border-blue-300 text-center' : 'bg-gray-200 text-black border-gray-300 text-left';
-                            return `<th class="px-2 py-3 ${bgClass} border-r uppercase text-[10px] tracking-wider sticky top-0 z-10">${c}</th>`;
+                            return `<th class="px-2 py-3 ${bgClass} border-r uppercase text-[10px] tracking-wider sticky top-0 z-10">${sanitizeHTML(c)}</th>`;
                         }).join('');
 
                         let rowsHtml = dadosFiltrados.map((row, idx) => {
                             let colsHtml = colunasExibir.map(c => {
-                                let val = row[c] || '-';
+                                let rawVal = row[c] || '-';
+                                let val = sanitizeHTML(String(rawVal));
                                 let cUpper = c.toUpperCase().trim();
                                 let alignText = 'text-left';
                                 let extraClasses = '';
 
-                                // Se for a coluna da sigla (PL, PLC, PELO), dá um destaque de formatação
                                 if (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') {
                                     alignText = 'text-center';
                                     extraClasses = 'font-bold text-navy bg-blue-50/50 text-sm';
                                 }
                                 
-                                // Colorização semântica para status/situação
                                 if (cUpper.includes('STATUS') || cUpper.includes('SITUAÇÃO') || cUpper.includes('TRAMITAÇÃO')) {
                                     let bg = 'text-gray-600 font-bold';
-                                    let vLower = String(val).toLowerCase();
+                                    let vLower = String(rawVal).toLowerCase();
                                     if (vLower.includes('aprovado') || vLower.includes('sancionado') || vLower.includes('ok')) bg = 'text-green-700 bg-green-100 px-2 py-1 rounded shadow-sm';
                                     else if (vLower.includes('andamento') || vLower.includes('tramitando') || vLower.includes('comissão')) bg = 'text-blue-700 bg-blue-100 px-2 py-1 rounded shadow-sm';
                                     else if (vLower.includes('arquivado') || vLower.includes('rejeitado') || vLower.includes('vetado')) bg = 'text-red-700 bg-red-100 px-2 py-1 rounded shadow-sm';
@@ -385,13 +365,11 @@
                         }).join('');
 
                         if (dadosFiltrados.length === 0) {
-                            rowsHtml = `<tr><td colspan="${colunasExibir.length}" class="p-8 text-center text-gray-500 italic"><i class="fa-solid fa-inbox text-3xl mb-3 text-gray-300 block"></i>Nenhum projeto encontrado para esta classificação.<br>Verifique se os dados na planilha contêm as siglas ou termos correspondentes (ex: PL, PLC, PELO).</td></tr>`;
+                            rowsHtml = `<tr><td colspan="${colunasExibir.length}" class="p-8 text-center text-gray-500 italic"><i class="fa-solid fa-inbox text-3xl mb-3 text-gray-300 block"></i>Nenhum projeto registrado nesta categoria.</td></tr>`;
                         }
 
-                        // Analisar os status da aba atual para gerar Cards e Gráficos
                         let statsMenu = analisarStatus(dadosFiltrados);
 
-                        // Inserir os gráficos na fila de renderização
                         chartsToInit.push({
                             id: `chart-macro-${idSecao}`, type: 'pie',
                             labels: ['Aprovados', 'Em Trâmite', 'Rejeitados'],
@@ -407,10 +385,9 @@
 
                         conteinerSecoes.innerHTML += `
                             <section id="${idSecao}" class="section-content">
-                                <!-- Cards Superiores (7 Métricas) -->
                                 <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-8">
                                     <div class="card p-3 border-l-4 border-navy shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate" title="Total - ${menu.nome}">Total - ${menu.nome.replace('PROJETO DE', 'P.')}</p>
+                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate" title="Total - ${sanitizeHTML(menu.nome)}">Total - ${sanitizeHTML(menu.nome).replace('PROJETO DE', 'P.')}</p>
                                         <h3 class="text-2xl font-black text-navy mt-1">${statsMenu.total}</h3>
                                     </div>
                                     <div class="card p-3 border-l-4 border-green-500 shadow-sm bg-white">
@@ -441,7 +418,7 @@
 
                                 <div class="flex flex-col gap-8">
                                     <div class="card overflow-hidden shadow-md bg-white border border-gray-300 w-full">
-                                        <div class="w-full overflow-x-auto">
+                                        <div class="w-full">
                                             <table class="w-full text-left text-xs border-collapse table-auto">
                                                 <thead class="shadow-sm bg-white">
                                                     <tr>${headerHtml}</tr>
@@ -453,7 +430,6 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Bloco Inferior de Gráficos (Lado a Lado) -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                                         <div class="card p-6 flex flex-col items-center justify-center shadow-md border-t-4 border-navy">
                                             <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 w-full text-center">Situação Geral</h4>
@@ -473,15 +449,12 @@
                         `;
                     });
 
-                    // Ativa a primeira aba do menu
                     const primeiroLink = document.querySelector('.nav-link');
                     if (primeiroLink) { primeiroLink.click(); }
 
-                    // Renderizar gráficos novos
                     chartsToInit.forEach(chartData => {
                         const canvas = document.getElementById(chartData.id);
                         if (canvas) {
-                            // Verifica se todos os valores estão zerados para mostrar um gráfico cinza amigável
                             const sumValues = chartData.values.reduce((a, b) => a + b, 0);
                             if (sumValues === 0) {
                                 chartData.labels = ['Nenhum registro nesta fase'];
@@ -520,7 +493,7 @@
                                             }
                                         }
                                     },
-                                    cutout: '50%' // Deixa o gráfico de pizza com um buraco no meio (Doughnut) para ficar mais moderno, caso prefira pizza cheia mude para '0%'
+                                    cutout: '50%'
                                 }
                             });
                         }
@@ -528,29 +501,18 @@
 
                 }
             } catch (erro) {
-                console.error("Erro ao processar dados:", erro);
+                console.error("Fetch Execution Error:", erro);
                 
-                let mensagemAjuda = "Verifique a URL e as permissões do Apps Script no Google.";
+                let mensagemAjuda = "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
                 if (erro.message.includes("Failed to fetch") || erro.name === "TypeError") {
-                    mensagemAjuda = "O navegador bloqueou a conexão por segurança (Erro de CORS). Isso ocorre quase sempre porque a sua planilha exige login do Google para ser lida.";
+                    mensagemAjuda = "Acesso aos dados foi restrito ou o serviço está temporariamente indisponível. Contate o administrador do sistema.";
                 }
 
                 document.getElementById('conteiner-secoes').innerHTML = `
                     <div class="text-center p-10 card w-full max-w-2xl mx-auto mt-10 shadow-lg border-t-4 border-red-500">
-                        <i class="fa-solid fa-user-lock text-red-500 text-5xl mb-4"></i>
-                        <h2 class="text-xl font-bold text-navy uppercase tracking-widest">Acesso Negado aos Dados</h2>
+                        <i class="fa-solid fa-server text-red-500 text-5xl mb-4"></i>
+                        <h2 class="text-xl font-bold text-navy uppercase tracking-widest">Falha de Sincronização</h2>
                         <p class="text-gray-600 mt-2 text-sm">${mensagemAjuda}</p>
-                        
-                        <div class="mt-8 bg-blue-50/50 p-6 rounded-lg text-left text-sm text-gray-800 border border-blue-100">
-                            <h3 class="font-bold text-navy mb-4 uppercase tracking-wider text-xs"><i class="fa-solid fa-wrench mr-2"></i>Como resolver no Google Sheets:</h3>
-                            <ol class="list-decimal pl-5 space-y-3 font-medium text-gray-700">
-                                <li>Abra sua planilha e vá em <b>Extensões > Apps Script</b>.</li>
-                                <li>No canto superior direito, clique em <b>Implantar > Nova implantação</b>.</li>
-                                <li>No campo <b class="text-red-600 bg-red-50 px-1 rounded">Quem tem acesso</b>, certifique-se de mudar para <b class="text-red-600 bg-red-50 px-1 rounded">Qualquer pessoa</b> (Não use "Qualquer pessoa com Conta do Google").</li>
-                                <li>Clique em <b>Implantar</b>.</li>
-                                <li>Copie o novo link gerado e substitua na variável <code>url</code> dentro do código deste painel.</li>
-                            </ol>
-                        </div>
                     </div>
                 `;
             }
