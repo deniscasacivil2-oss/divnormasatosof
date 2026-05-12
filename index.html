@@ -94,7 +94,7 @@
         </header>
 
         <!-- Seções geradas dinamicamente via JS -->
-        <div id="conteiner-secoes" class="p-4 md:p-8 w-full mx-auto max-w-[1400px]">
+        <div id="conteiner-secoes" class="p-2 md:p-6 w-full mx-auto max-w-[1600px]">
             <div class="flex flex-col items-center justify-center h-64 text-navy mt-20">
                 <i class="fa-solid fa-spinner fa-spin text-5xl mb-4 text-gold"></i>
                 <h2 class="text-xl font-bold uppercase tracking-widest">Sincronizando Dados</h2>
@@ -352,7 +352,7 @@
                         let headerHtml = colunasExibir.map(c => {
                             let cUpper = c.toUpperCase().trim();
                             let bgClass = (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') ? 'bg-blue-200 text-navy font-black border-blue-300 text-center' : 'bg-gray-200 text-black border-gray-300 text-left';
-                            return `<th class="p-3 ${bgClass} border-r min-w-[150px] max-w-[300px] uppercase text-[10px] tracking-wider sticky top-0 z-10">${c}</th>`;
+                            return `<th class="px-2 py-3 ${bgClass} border-r uppercase text-[10px] tracking-wider sticky top-0 z-10">${c}</th>`;
                         }).join('');
 
                         let rowsHtml = dadosFiltrados.map((row, idx) => {
@@ -377,11 +377,9 @@
                                     else if (vLower.includes('arquivado') || vLower.includes('rejeitado') || vLower.includes('vetado')) bg = 'text-red-700 bg-red-100 px-2 py-1 rounded shadow-sm';
                                     else if (vLower.includes('aguardando') || vLower.includes('pendente')) bg = 'text-orange-700 bg-orange-100 px-2 py-1 rounded shadow-sm';
                                     val = `<span class="text-[10px] uppercase tracking-wider inline-block ${bg}">${val}</span>`;
-                        } else if (String(val).length > 100) {
-                            val = `<div class="max-h-20 overflow-y-auto custom-scrollbar pr-2" title="${val}">${val}</div>`;
-                        }
+                                }
                                 
-                                return `<td class="p-3 text-gray-700 text-xs border-r border-gray-200 align-top min-w-[150px] max-w-[350px] whitespace-normal break-words ${alignText} ${extraClasses}">${val}</td>`;
+                                return `<td class="px-2 py-2 text-gray-700 text-xs border-r border-gray-200 align-middle whitespace-normal break-words ${alignText} ${extraClasses}">${val}</td>`;
                             }).join('');
                             return `<tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'}">${colsHtml}</tr>`;
                         }).join('');
@@ -443,8 +441,8 @@
 
                                 <div class="flex flex-col gap-8">
                                     <div class="card overflow-hidden shadow-md bg-white border border-gray-300 w-full">
-                                        <div class="overflow-x-auto custom-scrollbar w-full max-h-[600px] overflow-y-auto relative">
-                                            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+                                        <div class="w-full overflow-x-auto">
+                                            <table class="w-full text-left text-xs border-collapse table-auto">
                                                 <thead class="shadow-sm bg-white">
                                                     <tr>${headerHtml}</tr>
                                                 </thead>
