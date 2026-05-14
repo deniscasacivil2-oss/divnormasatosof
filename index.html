@@ -177,7 +177,7 @@
                 const configMenus = [
                     { id: 'secao-pl', titulo: 'Projeto de Lei', sigla: 'PL', icon: 'fa-file-lines' },
                     { id: 'secao-plc', titulo: 'Projeto de Lei Complementar', sigla: 'PLC', icon: 'fa-file-signature' },
-                    { id: 'secao-pelo', titulo: 'Projeto de Emenda à L.O.', sigla: 'PELO', icon: 'fa-book-bookmark' }
+                    { id: 'secao-pelo', titulo: 'Projeto de Emenda à Lei Orgânica', sigla: 'PELO', icon: 'fa-book-bookmark' }
                 ];
 
                 const menuLateral = document.getElementById('menu-lateral');
@@ -192,22 +192,30 @@
 
                 const todasColunas = Object.keys(dados[0]);
 
+                // Função auxiliar para ignorar acentos na comparação das colunas
+                const normalizarTexto = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
                 configMenus.forEach((menu) => {
-                    // Menu Esquerdo
+                    // Menu Esquerdo (Removido o 'truncate' para o texto quebrar de linha em vez de ser cortado)
                     menuLateral.innerHTML += `
                         <a href="#" onclick="showSection('${menu.id}', this, '${menu.titulo}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
                             <i class="fa-solid ${menu.icon} w-6 text-center"></i>
-                            <span class="truncate text-[11px] font-bold tracking-wider uppercase">${menu.titulo}</span>
+                            <span class="text-[11px] font-bold tracking-wider uppercase leading-tight">${menu.titulo}</span>
                         </a>
                     `;
 
                     // Filtra os dados da tabela
                     let dadosFiltrados = dados.filter(row => {
                         let textoPrincipal = '';
-                        if (row[menu.titulo]) {
-                            textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo].text || '') : String(row[menu.titulo] || '');
-                        } else if (row[menu.sigla]) {
-                            textoPrincipal = typeof row[menu.sigla] === 'object' ? String(row[menu.sigla].text || '') : String(row[menu.sigla] || '');
+                        
+                        // Busca a coluna correspondente tolerando falta de acentos
+                        let nomeColunaReal = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.titulo));
+                        let nomeColunaSigla = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.sigla));
+
+                        if (nomeColunaReal && row[nomeColunaReal]) {
+                            textoPrincipal = typeof row[nomeColunaReal] === 'object' ? String(row[nomeColunaReal].text || '') : String(row[nomeColunaReal] || '');
+                        } else if (nomeColunaSigla && row[nomeColunaSigla]) {
+                            textoPrincipal = typeof row[nomeColunaSigla] === 'object' ? String(row[nomeColunaSigla].text || '') : String(row[nomeColunaSigla] || '');
                         }
                         
                         textoPrincipal = textoPrincipal.trim();
@@ -218,9 +226,9 @@
                     });
 
                     let colunasExibir = todasColunas.filter(c => {
-                        let cUp = c.toUpperCase().trim();
-                        let isOutraSigla = chavesRaiz.includes(cUp) && cUp !== menu.sigla;
-                        let isOutroTitulo = configMenus.some(m => m.titulo.toUpperCase() === cUp && m.titulo.toUpperCase() !== menu.titulo.toUpperCase());
+                        let cUpNorm = normalizarTexto(c);
+                        let isOutraSigla = chavesRaiz.includes(cUpNorm) && cUpNorm !== menu.sigla;
+                        let isOutroTitulo = configMenus.some(m => normalizarTexto(m.titulo) === cUpNorm && normalizarTexto(m.titulo) !== normalizarTexto(menu.titulo));
                         return !isOutraSigla && !isOutroTitulo;
                     });
 
@@ -372,7 +380,13 @@
                     if (canvasStatus) {
                         let totalVal = [0, 0, 0]; 
                         let dadosFiltrados = dados.filter(row => {
-                            let textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo]?.text || '') : String(row[menu.titulo] || row[menu.sigla] || '');
+                            let nomeColunaReal = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.titulo));
+                            let nomeColunaSigla = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.sigla));
+                            
+                            let textoPrincipal = '';
+                            if (nomeColunaReal && row[nomeColunaReal]) textoPrincipal = typeof row[nomeColunaReal] === 'object' ? String(row[nomeColunaReal].text || '') : String(row[nomeColunaReal] || '');
+                            else if (nomeColunaSigla && row[nomeColunaSigla]) textoPrincipal = typeof row[nomeColunaSigla] === 'object' ? String(row[nomeColunaSigla].text || '') : String(row[nomeColunaSigla] || '');
+                            
                             return textoPrincipal.toUpperCase().startsWith(menu.sigla);
                         });
                         dadosFiltrados.forEach(row => {
@@ -406,7 +420,13 @@
                     if (canvasFase) {
                         let faseVal = [0, 0, 0]; 
                         let dadosFiltrados = dados.filter(row => {
-                            let textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo]?.text || '') : String(row[menu.titulo] || row[menu.sigla] || '');
+                            let nomeColunaReal = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.titulo));
+                            let nomeColunaSigla = Object.keys(row).find(k => normalizarTexto(k) === normalizarTexto(menu.sigla));
+                            
+                            let textoPrincipal = '';
+                            if (nomeColunaReal && row[nomeColunaReal]) textoPrincipal = typeof row[nomeColunaReal] === 'object' ? String(row[nomeColunaReal].text || '') : String(row[nomeColunaReal] || '');
+                            else if (nomeColunaSigla && row[nomeColunaSigla]) textoPrincipal = typeof row[nomeColunaSigla] === 'object' ? String(row[nomeColunaSigla].text || '') : String(row[nomeColunaSigla] || '');
+                            
                             return textoPrincipal.toUpperCase().startsWith(menu.sigla);
                         });
                         dadosFiltrados.forEach(row => {
