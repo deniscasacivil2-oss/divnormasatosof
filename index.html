@@ -10,10 +10,6 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Leaflet.js (Mapas) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -25,36 +21,25 @@
         .nav-link { transition: all 0.2s; border-radius: 8px; }
         .nav-link.active { background-color: #ffb800; color: #003366 !important; font-weight: 600; }
         .text-navy { color: #003366; }
-        .text-gray-contrast { color: #475569; }
         .section-content { display: none; }
         .section-content.active { display: block; animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .logo-container img { object-fit: contain; }
         
-        /* Ocultar barras de rolagem nativas horizontais antigas */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Nova Barra de Rolagem Horizontal (Customizada) para tabelas e status */
         .custom-scrollbar::-webkit-scrollbar { height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Ajuste para a coluna Status preencher a célula */
-        .status-cell { height: 1px; padding: 0 !important; }
-        .status-cell > div { min-height: 100%; height: 100%; }
-        
-        /* Previne que o conteúdo interno do menu amasse quando encolhe */
         .sidebar-content { min-width: 256px; }
-
-        /* Ajuste do z-index do mapa para não sobrepor o cabeçalho e menu */
-        .leaflet-container { z-index: 10 !important; font-family: 'Poppins', sans-serif; }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <!-- Menu Lateral com Width Dinâmico e Transição -->
+    <!-- Menu Lateral -->
     <aside id="sidebar" class="sidebar text-white flex-shrink-0 flex flex-col transition-all duration-300 w-64 overflow-hidden h-screen sticky top-0 z-50">
         <div class="sidebar-content flex flex-col h-full">
             <div class="p-6 text-center border-b border-blue-900">
@@ -64,7 +49,6 @@
                 <h2 class="text-[10px] font-bold tracking-widest uppercase text-blue-100 leading-tight px-2">ACOMPANHAMENTO DE PROJETOS DO EXECUTIVO NA CÂMARA</h2>
             </div>
             
-            <!-- Menu gerado dinamicamente via JS -->
             <nav id="menu-lateral" class="flex-grow p-4 space-y-2 mt-4 overflow-y-auto no-scrollbar">
                 <div class="animate-pulse flex items-center space-x-3 p-3">
                     <div class="rounded-full bg-blue-800 h-6 w-6"></div>
@@ -73,7 +57,7 @@
             </nav>
 
             <div class="p-6 bg-blue-950 text-[10px] text-blue-300 mt-auto border-t border-blue-900">
-                <p class="font-bold">Divisão de Normas e Atos Oficiais</p>
+                <p class="font-bold">Divisão de Governança, Processos e Projetos Estratégicos</p>
                 <p>Casa Civil | Município de Olímpia - SP</p>
             </div>
         </div>
@@ -89,14 +73,13 @@
             </div>
             <div class="flex items-center space-x-3">
                 <span class="bg-blue-100 text-navy px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Ano 2026</span>
-                <div class="h-8 w-8 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-xs shadow-md border-2 border-gold">OP</div>
+                <div class="h-8 w-8 rounded-full bg-navy text-white flex items-center justify-center font-bold text-xs shadow-md border-2 border-gray-200">OP</div>
             </div>
         </header>
 
-        <!-- Seções geradas dinamicamente via JS -->
-        <div id="conteiner-secoes" class="p-2 md:p-6 w-full mx-auto max-w-[1600px]">
+        <div id="conteiner-secoes" class="p-4 md:p-8 w-full mx-auto max-w-[1600px]">
             <div class="flex flex-col items-center justify-center h-64 text-navy mt-20">
-                <i class="fa-solid fa-spinner fa-spin text-5xl mb-4 text-gold"></i>
+                <i class="fa-solid fa-spinner fa-spin text-5xl mb-4 text-blue-500"></i>
                 <h2 class="text-xl font-bold uppercase tracking-widest">Sincronizando Dados</h2>
                 <p class="text-sm text-gray-500 mt-2">Construindo painéis a partir da nuvem...</p>
             </div>
@@ -104,19 +87,7 @@
     </main>
 
     <script>
-        function sanitizeHTML(str) {
-            if (str === null || str === undefined) return '';
-            return String(str).replace(/[&<>'"]/g, function(match) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;',
-                    '"': '&quot;'
-                }[match];
-            });
-        }
-
+        // Gestão Retrátil do Menu
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (sidebar.classList.contains('w-64')) {
@@ -126,393 +97,357 @@
             }
         }
 
-        const url = 'https://script.google.com/macros/s/AKfycbzEdNDz9fw0wrfHeMy4lEnV5F2-bP36gug4grRlvKspw_p8Dw9J6HiY92NBrpk6chGLng/exec';
+        // Nova URL da API do Apps Script
+        const url = 'https://script.google.com/macros/s/AKfycbyNTTuxwuf_i0tNdBqJ4Db27rGhwpO21YTWZn1VfADhz_HvHSRcVwwgaTEa2LyGRst2NA/exec';
 
+        // Alternador de Abas
         window.showSection = function(sectionId, element, titulo) {
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            element.classList.add('active');
+            if(element) element.classList.add('active');
 
             document.querySelectorAll('.section-content').forEach(section => section.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
+            const sec = document.getElementById(sectionId);
+            if(sec) sec.classList.add('active');
 
             document.getElementById('page-title').innerText = titulo;
             
-            if (window.appMaps && window.appMaps[sectionId]) {
-                setTimeout(() => {
-                    window.appMaps[sectionId].invalidateSize();
-                }, 50);
-            }
-
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.replace('w-64', 'w-0');
             }
         }
 
-        window.parseDinheiro = function(valor) {
-            if (valor === null || valor === undefined || valor === '') return 0;
-            if (typeof valor === 'number') return valor;
-            let vStr = String(valor).trim();
+        // Sanitização contra ataques XSS
+        function sanitizeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, function(match) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[match];
+            });
+        }
+
+        // Formata os textos com ou sem Hyperlink
+        function formatarValorLink(valObj, isMainCol) {
+            if (!valObj) return '-';
             
-            vStr = vStr.replace(/[R$\s]/gi, '');
+            let texto = '';
+            let linkUrl = '';
             
-            if (vStr.includes(',')) {
-                vStr = vStr.replace(/\./g, '').replace(',', '.');
+            // Verifica se o Apps Script enviou o formato de Objeto contendo texto e link
+            if (typeof valObj === 'object') {
+                texto = String(valObj.text || '').trim();
+                linkUrl = valObj.link ? String(valObj.link).trim() : '';
             } else {
-                if ((vStr.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(vStr)) {
-                    vStr = vStr.replace(/\./g, '');
-                }
+                texto = String(valObj).trim();
+            }
+
+            if (texto === '' || texto === '-' || texto.toLowerCase() === 'n/a') return texto;
+            
+            let safeText = sanitizeHTML(texto);
+            
+            // Se houver uma URL associada, transforma num elemento <a> clicável 
+            if (linkUrl && linkUrl.startsWith('http')) {
+                let safeUrl = sanitizeHTML(linkUrl);
+                let linkClass = isMainCol 
+                    ? "text-blue-700 hover:text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2 transition-colors cursor-pointer inline-block"
+                    : "text-blue-600 hover:text-blue-800 underline transition-colors cursor-pointer";
+                
+                // Exibe a dica da URL ao passar o mouse usando o atributo title
+                return `<a href="${safeUrl}" target="_blank" title="${safeUrl}" class="${linkClass}" onclick="event.stopPropagation()">${safeText}</a>`;
             }
             
-            let num = parseFloat(vStr.replace(/[^\d.-]/g, ''));
-            return isNaN(num) ? 0 : num;
+            return safeText;
         }
 
-        window.parseCoordinates = function(coordStr) {
-            if (!coordStr) return null;
-            let simpleMatch = coordStr.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
-            if (simpleMatch) return [parseFloat(simpleMatch[1]), parseFloat(simpleMatch[2])];
-            let urlMatch = coordStr.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-            if (urlMatch) return [parseFloat(urlMatch[1]), parseFloat(urlMatch[2])];
-            let qMatch = coordStr.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-            if (qMatch) return [parseFloat(qMatch[1]), parseFloat(qMatch[2])];
-            return null;
-        }
-
-        window.focarNoMapa = function(idSecao, lat, lng) {
-            if (window.appMaps && window.appMaps[idSecao]) {
-                const map = window.appMaps[idSecao];
-                map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
-                
-                if (window.appMarkers && window.appMarkers[`${idSecao}_${lat}_${lng}`]) {
-                    setTimeout(() => {
-                        window.appMarkers[`${idSecao}_${lat}_${lng}`].openPopup();
-                    }, 1500); 
-                }
-            }
-        }
-
+        // Carrega os Dados e Monta a Tela
         async function carregarDados() {
             try {
-                const resposta = await fetch(url, { 
-                    method: 'GET',
-                    mode: 'cors',
-                    redirect: 'follow' 
-                });
+                const resposta = await fetch(url, { redirect: 'follow' });
+                if (!resposta.ok) throw new Error("Erro na rede: " + resposta.status);
+                
                 const textoResposta = await resposta.text();
-                
-                let dadosBrutos;
+                let dados = [];
                 try {
-                    dadosBrutos = JSON.parse(textoResposta);
+                    dados = JSON.parse(textoResposta);
                 } catch (parseErro) {
-                    throw new Error("Invalid response payload.");
+                    throw new Error("O servidor não retornou JSON.");
                 }
                 
-                let dadosCompletos = Array.isArray(dadosBrutos) ? dadosBrutos : [dadosBrutos];
+                if (!Array.isArray(dados)) dados = [dados];
 
-                let linhaTotal = dadosCompletos.find(linha => {
-                    const valImovel = String(linha['IMÓVEL'] || '').toUpperCase().trim();
-                    const valOrdem = String(linha['ORDEM'] || linha['Ordem'] || '').toUpperCase().trim();
-                    return valImovel === 'TOTAL' || valImovel.startsWith('TOTAL ') || valImovel.startsWith('TOTAL:') || valOrdem === 'TOTAL';
+                const chavesRaiz = ['PL', 'PLC', 'PELO'];
+                const configMenus = [
+                    { id: 'secao-pl', titulo: 'Projeto de Lei', sigla: 'PL', icon: 'fa-file-lines' },
+                    { id: 'secao-plc', titulo: 'Projeto de Lei Complementar', sigla: 'PLC', icon: 'fa-file-signature' },
+                    { id: 'secao-pelo', titulo: 'Projeto de Emenda à L.O.', sigla: 'PELO', icon: 'fa-book-bookmark' }
+                ];
+
+                const menuLateral = document.getElementById('menu-lateral');
+                const conteinerSecoes = document.getElementById('conteiner-secoes');
+                menuLateral.innerHTML = '';
+                conteinerSecoes.innerHTML = '';
+
+                if (dados.length === 0) {
+                    conteinerSecoes.innerHTML = `<div class="p-10 text-center text-gray-500">Nenhum dado encontrado.</div>`;
+                    return;
+                }
+
+                const todasColunas = Object.keys(dados[0]);
+
+                configMenus.forEach((menu) => {
+                    // Menu Esquerdo
+                    menuLateral.innerHTML += `
+                        <a href="#" onclick="showSection('${menu.id}', this, '${menu.titulo}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                            <i class="fa-solid ${menu.icon} w-6 text-center"></i>
+                            <span class="truncate text-[11px] font-bold tracking-wider uppercase">${menu.titulo}</span>
+                        </a>
+                    `;
+
+                    // Filtra os dados da tabela
+                    let dadosFiltrados = dados.filter(row => {
+                        let textoPrincipal = '';
+                        if (row[menu.titulo]) {
+                            textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo].text || '') : String(row[menu.titulo] || '');
+                        } else if (row[menu.sigla]) {
+                            textoPrincipal = typeof row[menu.sigla] === 'object' ? String(row[menu.sigla].text || '') : String(row[menu.sigla] || '');
+                        }
+                        
+                        textoPrincipal = textoPrincipal.trim();
+                        if (textoPrincipal !== '' && textoPrincipal !== '-') {
+                            return textoPrincipal.toUpperCase().startsWith(menu.sigla);
+                        }
+                        return false;
+                    });
+
+                    let colunasExibir = todasColunas.filter(c => {
+                        let cUp = c.toUpperCase().trim();
+                        let isOutraSigla = chavesRaiz.includes(cUp) && cUp !== menu.sigla;
+                        let isOutroTitulo = configMenus.some(m => m.titulo.toUpperCase() === cUp && m.titulo.toUpperCase() !== menu.titulo.toUpperCase());
+                        return !isOutraSigla && !isOutroTitulo;
+                    });
+
+                    // Contagens para os Cards e Gráficos
+                    let tAprovado=0, tRejeitado=0, tTramite=0;
+                    let tDeliberacao=0, tDiscussao1=0, tDiscussao2=0;
+
+                    dadosFiltrados.forEach(row => {
+                        let statusStr = '';
+                        let tramiteStr = '';
+                        
+                        colunasExibir.forEach(c => {
+                            let cUp = c.toUpperCase();
+                            let valObj = row[c];
+                            let cellText = typeof valObj === 'object' && valObj !== null ? String(valObj.text || '') : String(valObj || '');
+                            cellText = cellText.toLowerCase();
+
+                            if (cUp === 'STATUS FINAL') statusStr += ' ' + cellText;
+                            if (cUp === 'TRÂMITE NA CÂMARA') tramiteStr += ' ' + cellText;
+                        });
+
+                        let allTextStatus = statusStr;
+                        if (allTextStatus.includes('aprovado') || allTextStatus.includes('sancionad') || allTextStatus.includes('promulgad')) tAprovado++;
+                        else if (allTextStatus.includes('rejeitado') || allTextStatus.includes('arquivado') || allTextStatus.includes('vetado')) tRejeitado++;
+                        else if (allTextStatus.includes('tramitando') || allTextStatus.includes('andamento') || allTextStatus.includes('discussão') || allTextStatus.includes('deliberação')) tTramite++;
+
+                        let allTextTramite = tramiteStr;
+                        if (allTextTramite.includes('deliberação') || allTextTramite.includes('deliberacao')) tDeliberacao++;
+                        if (allTextTramite.includes('1ª discussão') || allTextTramite.includes('1a discussão') || allTextTramite.includes('1º') || allTextTramite.includes('1°')) tDiscussao1++;
+                        if (allTextTramite.includes('2ª discussão') || allTextTramite.includes('2a discussão') || allTextTramite.includes('2º') || allTextTramite.includes('2°')) tDiscussao2++;
+                    });
+
+                    // HTML dos Cards
+                    let cardsHtml = `
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                            <div class="card p-3 border-b-4 border-navy shadow-sm flex flex-col justify-center items-center text-center">
+                                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Total</p>
+                                <h3 class="text-xl font-black text-navy mt-1">${dadosFiltrados.length}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-green-500 shadow-sm flex flex-col justify-center items-center text-center bg-green-50/30">
+                                <p class="text-[9px] font-bold text-green-700 uppercase tracking-wider">Aprovados</p>
+                                <h3 class="text-xl font-black text-green-700 mt-1">${tAprovado}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-red-500 shadow-sm flex flex-col justify-center items-center text-center bg-red-50/30">
+                                <p class="text-[9px] font-bold text-red-700 uppercase tracking-wider">Rejeitados/Arq</p>
+                                <h3 class="text-xl font-black text-red-700 mt-1">${tRejeitado}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-blue-500 shadow-sm flex flex-col justify-center items-center text-center bg-blue-50/30">
+                                <p class="text-[9px] font-bold text-blue-700 uppercase tracking-wider">Em Trâmite</p>
+                                <h3 class="text-xl font-black text-blue-700 mt-1">${tTramite}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-orange-400 shadow-sm flex flex-col justify-center items-center text-center bg-orange-50/30">
+                                <p class="text-[9px] font-bold text-orange-700 uppercase tracking-wider">Deliberação</p>
+                                <h3 class="text-xl font-black text-orange-700 mt-1">${tDeliberacao}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-purple-500 shadow-sm flex flex-col justify-center items-center text-center bg-purple-50/30">
+                                <p class="text-[9px] font-bold text-purple-700 uppercase tracking-wider">1ª Discussão</p>
+                                <h3 class="text-xl font-black text-purple-700 mt-1">${tDiscussao1}</h3>
+                            </div>
+                            <div class="card p-3 border-b-4 border-indigo-500 shadow-sm flex flex-col justify-center items-center text-center bg-indigo-50/30">
+                                <p class="text-[9px] font-bold text-indigo-700 uppercase tracking-wider">2ª Discussão</p>
+                                <h3 class="text-xl font-black text-indigo-700 mt-1">${tDiscussao2}</h3>
+                            </div>
+                        </div>
+                    `;
+
+                    // HTML da Tabela
+                    let theadHtml = `<tr>`;
+                    colunasExibir.forEach(c => {
+                        let cUp = c.toUpperCase().trim();
+                        let isMainCol = (cUp === 'PL' || cUp === 'PLC' || cUp === 'PELO');
+                        let classes = isMainCol 
+                            ? `p-3 text-center bg-blue-100 text-blue-900 border-r border-blue-200 min-w-[150px] sticky top-0 font-black shadow-sm` 
+                            : `p-3 text-left border-r border-gray-300 min-w-[180px] sticky top-0`;
+                        theadHtml += `<th class="${classes}">${c}</th>`;
+                    });
+                    theadHtml += `</tr>`;
+
+                    let tbodyHtml = '';
+                    if (dadosFiltrados.length === 0) {
+                        tbodyHtml = `<tr><td colspan="${colunasExibir.length}" class="p-8 text-center text-gray-500 font-medium">Nenhum projeto encontrado para esta categoria.</td></tr>`;
+                    } else {
+                        dadosFiltrados.forEach((row, idx) => {
+                            let trClass = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                            tbodyHtml += `<tr class="${trClass} hover:bg-blue-50 transition-colors border-b border-gray-200">`;
+                            
+                            colunasExibir.forEach(c => {
+                                let cUp = c.toUpperCase().trim();
+                                let isMainCol = (cUp === 'PL' || cUp === 'PLC' || cUp === 'PELO');
+                                let valHtml = formatarValorLink(row[c], isMainCol);
+                                
+                                let extraClasses = isMainCol ? 'font-bold text-navy bg-blue-50/50 text-sm text-center align-middle' : 'text-left align-top';
+                                let contentDisplay = valHtml;
+
+                                if (cUp.includes('STATUS') || cUp.includes('SITUAÇÃO') || cUp.includes('TRAMITAÇÃO') || cUp.includes('TRÂMITE')) {
+                                    let rawText = typeof row[c] === 'object' ? String(row[c].text || '') : String(row[c] || '');
+                                    let rawLow = rawText.toLowerCase();
+                                    if(rawLow.includes('aprovado') || rawLow.includes('sancionad') || rawLow.includes('promulgad')) {
+                                        contentDisplay = `<span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">${valHtml}</span>`;
+                                    } else if (rawLow.includes('rejeitado') || rawLow.includes('arquivado') || rawLow.includes('vetado')) {
+                                        contentDisplay = `<span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">${valHtml}</span>`;
+                                    } else if (rawLow.includes('tramitando') || rawLow.includes('andamento') || rawLow.includes('discussão') || rawLow.includes('deliberação')) {
+                                        contentDisplay = `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">${valHtml}</span>`;
+                                    }
+                                }
+
+                                tbodyHtml += `<td class="p-3 text-xs text-gray-700 whitespace-normal break-words border-r border-gray-100 ${extraClasses}">${contentDisplay}</td>`;
+                            });
+                            tbodyHtml += `</tr>`;
+                        });
+                    }
+
+                    conteinerSecoes.innerHTML += `
+                        <section id="${menu.id}" class="section-content">
+                            ${cardsHtml}
+                            <div class="card overflow-hidden shadow-md bg-white w-full mb-8">
+                                <div class="w-full overflow-x-auto">
+                                    <table class="w-full border-collapse">
+                                        <thead class="uppercase text-[10px] bg-gray-200 text-black">
+                                            ${theadHtml}
+                                        </thead>
+                                        <tbody class="text-gray-800 font-medium">
+                                            ${tbodyHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="card p-6 shadow-sm border-t-4 border-gray-300">
+                                    <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest text-center">Situação Geral</h4>
+                                    <div class="h-64 relative w-full flex justify-center">
+                                        ${(tAprovado + tRejeitado + tTramite) > 0 ? `<canvas id="chart-status-${menu.id}"></canvas>` : `<div class="flex items-center justify-center h-full text-gray-400 text-xs italic">Nenhum registro classificado</div>`}
+                                    </div>
+                                </div>
+                                <div class="card p-6 shadow-sm border-t-4 border-blue-300">
+                                    <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest text-center">Fases de Trâmite</h4>
+                                    <div class="h-64 relative w-full flex justify-center">
+                                        ${(tDeliberacao + tDiscussao1 + tDiscussao2) > 0 ? `<canvas id="chart-fase-${menu.id}"></canvas>` : `<div class="flex items-center justify-center h-full text-gray-400 text-xs italic">Nenhum registro nesta fase</div>`}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    `;
                 });
 
-                let dados = dadosCompletos.filter(linha => linha !== linhaTotal);
-
-                if (dados.length > 0) {
-                    const menuLateral = document.getElementById('menu-lateral');
-                    const conteinerSecoes = document.getElementById('conteiner-secoes');
-
-                    menuLateral.innerHTML = '';
-                    conteinerSecoes.innerHTML = '';
-
-                    const todasColunas = Object.keys(dados[0]).map(c => sanitizeHTML(c));
-                    
-                    const menusSolicitados = [
-                        { nome: 'PROJETO DE LEI', icone: 'fa-file-lines' },
-                        { nome: 'PROJETO DE LEI COMPLEMENTAR', icone: 'fa-file-circle-plus' },
-                        { nome: 'PROJETO DE EMENDA A LEI ORGÂNICA', icone: 'fa-book-open' }
-                    ];
-
-                    let chartsToInit = [];
-
-                    const analisarStatus = (lista) => {
-                        let stats = { total: lista.length, aprovado: 0, rejeitado: 0, tramite: 0, deliberacao: 0, disc1: 0, disc2: 0 };
-                        
-                        let colunasStatus = todasColunas.filter(c => {
-                            let cUpper = c.toUpperCase().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U').trim();
-                            return cUpper === 'STATUS FINAL' || cUpper === 'TRAMITE NA CAMARA';
-                        });
-                        
-                        if (colunasStatus.length > 0) {
-                            lista.forEach(r => {
-                                let valCombinado = colunasStatus.map(c => String(r[c] || '').toLowerCase().trim()).join(' ');
-                                
-                                if (!valCombinado || valCombinado.replace(/-/g, '').trim() === '') return;
-
-                                let isAprovado = valCombinado.includes('aprovado') || valCombinado.includes('sancionado') || valCombinado.includes('promulgado') || valCombinado.includes('ok');
-                                let isRejeitado = valCombinado.includes('rejeitado') || valCombinado.includes('arquivado') || valCombinado.includes('vetado');
-                                
-                                let isDeliberacao = valCombinado.includes('delibera') || valCombinado.includes('leitura');
-                                let is1a = valCombinado.includes('1ª') || valCombinado.includes('1a') || valCombinado.includes('1º') || valCombinado.includes('1°') || valCombinado.includes('primeira');
-                                let is2a = valCombinado.includes('2ª') || valCombinado.includes('2a') || valCombinado.includes('2º') || valCombinado.includes('2°') || valCombinado.includes('segunda');
-
-                                if (isAprovado) stats.aprovado++;
-                                else if (isRejeitado) stats.rejeitado++;
-                                else stats.tramite++; 
-
-                                if (isDeliberacao) stats.deliberacao++;
-                                if (is1a) stats.disc1++;
-                                if (is2a) stats.disc2++;
-                            });
-                        }
-                        return stats;
-                    };
-
-                    menusSolicitados.forEach((menu, index) => {
-                        const idSecao = 'secao-leg-' + index;
-
-                        menuLateral.innerHTML += `
-                            <a href="#" onclick="showSection('${idSecao}', this, '${sanitizeHTML(menu.nome)}')" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
-                                <i class="fa-solid ${menu.icone} w-6 text-center"></i>
-                                <span class="truncate text-[11px] font-bold tracking-wider uppercase">${sanitizeHTML(menu.nome)}</span>
-                            </a>
-                        `;
-
+                // Renderiza os Gráficos de Pizza/Doughnut
+                configMenus.forEach(menu => {
+                    let canvasStatus = document.getElementById(`chart-status-${menu.id}`);
+                    if (canvasStatus) {
+                        let totalVal = [0, 0, 0]; 
                         let dadosFiltrados = dados.filter(row => {
-                            let isMatch = false;
-                            
-                            let colunasDoMenuAtual = todasColunas.filter(c => {
-                                let cUpper = c.toUpperCase().trim().replace(/[ÀÁÂÃ]/g, 'A').replace(/[ÉÊ]/g, 'E').replace(/[Í]/g, 'I').replace(/[ÓÔÕ]/g, 'O').replace(/[Ú]/g, 'U');
-                                if (menu.nome === 'PROJETO DE LEI') return cUpper === 'PROJETO DE LEI' || cUpper === 'PROJETOS DE LEI' || cUpper === 'PL' || cUpper === 'PLS';
-                                if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') return cUpper.includes('COMPLEMENTAR') || cUpper === 'PLC';
-                                if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') return (cUpper.includes('EMENDA') && cUpper.includes('ORGANICA')) || cUpper === 'PELO';
-                                return false;
-                            });
-
-                            colunasDoMenuAtual.forEach(colName => {
-                                let val = String(row[colName] || '').trim();
-                                if (val !== '' && val !== '-' && val.toLowerCase() !== 'n/a' && val.toLowerCase() !== 'não' && val.toLowerCase() !== 'nao') {
-                                    isMatch = true;
+                            let textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo]?.text || '') : String(row[menu.titulo] || row[menu.sigla] || '');
+                            return textoPrincipal.toUpperCase().startsWith(menu.sigla);
+                        });
+                        dadosFiltrados.forEach(row => {
+                            let statusStr = '';
+                            Object.keys(row).forEach(c => {
+                                let cUp = c.toUpperCase();
+                                if(cUp === 'STATUS FINAL'){
+                                    statusStr += ' ' + (typeof row[c] === 'object' ? String(row[c]?.text || '') : String(row[c] || ''));
                                 }
                             });
-
-                            if (!isMatch) {
-                                Object.values(row).forEach(val => {
-                                    let v = String(val || '').toUpperCase().trim();
-                                    if (menu.nome === 'PROJETO DE LEI') {
-                                        if (/^PL\b/.test(v) || (v.includes('PROJETO DE LEI') && !v.includes('COMPLEMENTAR'))) isMatch = true;
-                                    } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
-                                        if (/^PLC\b/.test(v) || v.includes('PROJETO DE LEI COMPLEMENTAR') || v.includes('PL COMPLEMENTAR') || v.includes('COMPLEMENTAR')) isMatch = true;
-                                    } else if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') {
-                                        if (/^PELO\b/.test(v) || (v.includes('EMENDA') && (v.includes('ORGÂNICA') || v.includes('ORGANICA')))) isMatch = true;
-                                    }
-                                });
-                            }
-                            return isMatch;
+                            statusStr = statusStr.toLowerCase();
+                            if(statusStr.includes('aprovado') || statusStr.includes('sancionad')) totalVal[0]++;
+                            else if(statusStr.includes('rejeitado') || statusStr.includes('arquivado')) totalVal[1]++;
+                            else if(statusStr.includes('tramitando') || statusStr.includes('andamento') || statusStr.includes('discussão') || statusStr.includes('deliberação')) totalVal[2]++;
                         });
-
-                        let colunasExibir = todasColunas.filter(c => {
-                            if (c.trim() === '') return false;
-                            
-                            let cUpper = c.toUpperCase().trim().replace(/À/g, 'A').replace(/Â/g, 'A');
-                            
-                            let termosPL = ['PROJETO DE LEI', 'PL'];
-                            let termosPLC = ['PROJETO DE LEI COMPLEMENTAR', 'PLC', 'PL COMPLEMENTAR'];
-                            let termosPELO = ['PROJETO DE EMENDA A LEI ORGANICA', 'PELO'];
-
-                            if (menu.nome === 'PROJETO DE LEI') {
-                                if (termosPLC.includes(cUpper) || termosPELO.includes(cUpper)) return false;
-                            } else if (menu.nome === 'PROJETO DE LEI COMPLEMENTAR') {
-                                if (termosPL.includes(cUpper) || termosPELO.includes(cUpper)) return false;
-                            } else if (menu.nome === 'PROJETO DE EMENDA A LEI ORGÂNICA') {
-                                if (termosPL.includes(cUpper) || termosPLC.includes(cUpper)) return false;
-                            }
-                            
-                            return true;
+                        new Chart(canvasStatus.getContext('2d'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Aprovados', 'Rejeitados/Arq', 'Em Trâmite'],
+                                datasets: [{
+                                    data: totalVal,
+                                    backgroundColor: ['#22c55e', '#ef4444', '#3b82f6'],
+                                    borderWidth: 2, borderColor: '#ffffff'
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: {font:{size:10}} } } }
                         });
-                        
-                        let headerHtml = colunasExibir.map(c => {
-                            let cUpper = c.toUpperCase().trim();
-                            let bgClass = (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') ? 'bg-blue-200 text-navy font-black border-blue-300 text-center' : 'bg-gray-200 text-black border-gray-300 text-left';
-                            return `<th class="px-2 py-3 ${bgClass} border-r uppercase text-[10px] tracking-wider sticky top-0 z-10">${sanitizeHTML(c)}</th>`;
-                        }).join('');
+                    }
 
-                        let rowsHtml = dadosFiltrados.map((row, idx) => {
-                            let colsHtml = colunasExibir.map(c => {
-                                let rawVal = row[c] || '-';
-                                let val = sanitizeHTML(String(rawVal));
-                                let cUpper = c.toUpperCase().trim();
-                                let alignText = 'text-left';
-                                let extraClasses = '';
-
-                                if (cUpper === 'PL' || cUpper === 'PLC' || cUpper === 'PELO') {
-                                    alignText = 'text-center';
-                                    extraClasses = 'font-bold text-navy bg-blue-50/50 text-sm';
-                                }
-                                
-                                if (cUpper.includes('STATUS') || cUpper.includes('SITUAÇÃO') || cUpper.includes('TRAMITAÇÃO')) {
-                                    let bg = 'text-gray-600 font-bold';
-                                    let vLower = String(rawVal).toLowerCase();
-                                    if (vLower.includes('aprovado') || vLower.includes('sancionado') || vLower.includes('ok')) bg = 'text-green-700 bg-green-100 px-2 py-1 rounded shadow-sm';
-                                    else if (vLower.includes('andamento') || vLower.includes('tramitando') || vLower.includes('comissão')) bg = 'text-blue-700 bg-blue-100 px-2 py-1 rounded shadow-sm';
-                                    else if (vLower.includes('arquivado') || vLower.includes('rejeitado') || vLower.includes('vetado')) bg = 'text-red-700 bg-red-100 px-2 py-1 rounded shadow-sm';
-                                    else if (vLower.includes('aguardando') || vLower.includes('pendente')) bg = 'text-orange-700 bg-orange-100 px-2 py-1 rounded shadow-sm';
-                                    val = `<span class="text-[10px] uppercase tracking-wider inline-block ${bg}">${val}</span>`;
-                                }
-                                
-                                return `<td class="px-2 py-2 text-gray-700 text-xs border-r border-gray-200 align-middle whitespace-normal break-words ${alignText} ${extraClasses}">${val}</td>`;
-                            }).join('');
-                            return `<tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'}">${colsHtml}</tr>`;
-                        }).join('');
-
-                        if (dadosFiltrados.length === 0) {
-                            rowsHtml = `<tr><td colspan="${colunasExibir.length}" class="p-8 text-center text-gray-500 italic"><i class="fa-solid fa-inbox text-3xl mb-3 text-gray-300 block"></i>Nenhum projeto registrado nesta categoria.</td></tr>`;
-                        }
-
-                        let statsMenu = analisarStatus(dadosFiltrados);
-
-                        chartsToInit.push({
-                            id: `chart-macro-${idSecao}`, type: 'pie',
-                            labels: ['Aprovados', 'Em Trâmite', 'Rejeitados'],
-                            values: [statsMenu.aprovado, statsMenu.tramite, statsMenu.rejeitado],
-                            colors: ['#16a34a', '#3b82f6', '#ef4444']
+                    let canvasFase = document.getElementById(`chart-fase-${menu.id}`);
+                    if (canvasFase) {
+                        let faseVal = [0, 0, 0]; 
+                        let dadosFiltrados = dados.filter(row => {
+                            let textoPrincipal = typeof row[menu.titulo] === 'object' ? String(row[menu.titulo]?.text || '') : String(row[menu.titulo] || row[menu.sigla] || '');
+                            return textoPrincipal.toUpperCase().startsWith(menu.sigla);
                         });
-                        chartsToInit.push({
-                            id: `chart-fases-${idSecao}`, type: 'pie',
-                            labels: ['Deliberação', '1ª Discussão', '2ª Discussão'],
-                            values: [statsMenu.deliberacao, statsMenu.disc1, statsMenu.disc2],
-                            colors: ['#a855f7', '#f97316', '#14b8a6']
-                        });
-
-                        conteinerSecoes.innerHTML += `
-                            <section id="${idSecao}" class="section-content">
-                                <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-8">
-                                    <div class="card p-3 border-l-4 border-navy shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate" title="Total - ${sanitizeHTML(menu.nome)}">Total - ${sanitizeHTML(menu.nome).replace('PROJETO DE', 'P.')}</p>
-                                        <h3 class="text-2xl font-black text-navy mt-1">${statsMenu.total}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-green-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Aprovados</p>
-                                        <h3 class="text-2xl font-black text-green-600 mt-1">${statsMenu.aprovado}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-red-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Rejeitados</p>
-                                        <h3 class="text-2xl font-black text-red-600 mt-1">${statsMenu.rejeitado}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-blue-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Em Trâmite</p>
-                                        <h3 class="text-2xl font-black text-blue-600 mt-1">${statsMenu.tramite}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-purple-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">Deliberação</p>
-                                        <h3 class="text-2xl font-black text-purple-600 mt-1">${statsMenu.deliberacao}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-orange-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">1ª Discussão</p>
-                                        <h3 class="text-2xl font-black text-orange-600 mt-1">${statsMenu.disc1}</h3>
-                                    </div>
-                                    <div class="card p-3 border-l-4 border-teal-500 shadow-sm bg-white">
-                                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">2ª Discussão</p>
-                                        <h3 class="text-2xl font-black text-teal-600 mt-1">${statsMenu.disc2}</h3>
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-col gap-8">
-                                    <div class="card overflow-hidden shadow-md bg-white border border-gray-300 w-full">
-                                        <div class="w-full">
-                                            <table class="w-full text-left text-xs border-collapse table-auto">
-                                                <thead class="shadow-sm bg-white">
-                                                    <tr>${headerHtml}</tr>
-                                                </thead>
-                                                <tbody class="text-gray-800 font-medium">
-                                                    ${rowsHtml}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                        <div class="card p-6 flex flex-col items-center justify-center shadow-md border-t-4 border-navy">
-                                            <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 w-full text-center">Situação Geral</h4>
-                                            <div class="h-64 w-full relative">
-                                                <canvas id="chart-macro-${idSecao}"></canvas>
-                                            </div>
-                                        </div>
-                                        <div class="card p-6 flex flex-col items-center justify-center shadow-md border-t-4 border-gold">
-                                            <h4 class="font-black text-navy text-xs mb-4 uppercase tracking-widest border-b border-gray-100 pb-2 w-full text-center">Fases de Trâmite</h4>
-                                            <div class="h-64 w-full relative">
-                                                <canvas id="chart-fases-${idSecao}"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-                        `;
-                    });
-
-                    const primeiroLink = document.querySelector('.nav-link');
-                    if (primeiroLink) { primeiroLink.click(); }
-
-                    chartsToInit.forEach(chartData => {
-                        const canvas = document.getElementById(chartData.id);
-                        if (canvas) {
-                            const sumValues = chartData.values.reduce((a, b) => a + b, 0);
-                            if (sumValues === 0) {
-                                chartData.labels = ['Nenhum registro nesta fase'];
-                                chartData.values = [1];
-                                chartData.colors = ['#e2e8f0'];
-                            }
-
-                            new Chart(canvas.getContext('2d'), {
-                                type: chartData.type,
-                                data: {
-                                    labels: chartData.labels,
-                                    datasets: [{
-                                        data: chartData.values,
-                                        backgroundColor: chartData.colors,
-                                        borderWidth: 2,
-                                        borderColor: '#ffffff',
-                                        hoverOffset: 4
-                                    }]
-                                },
-                                options: {
-                                    responsive: true, maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { 
-                                            position: 'bottom', 
-                                            labels: { font: { family: "'Poppins', sans-serif", size: 10, weight: '600' }, padding: 15, usePointStyle: true } 
-                                        },
-                                        tooltip: {
-                                            backgroundColor: 'rgba(0, 51, 102, 0.95)', titleFont: { family: "'Poppins', sans-serif", size: 12, weight: 'bold' }, bodyFont: { family: "'Poppins', sans-serif", size: 11 }, padding: 10, cornerRadius: 8,
-                                            callbacks: {
-                                                label: function(context) {
-                                                    if (sumValues === 0) return ' Sem dados no momento';
-                                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                                    const porcentagem = ((context.raw / total) * 100).toFixed(1);
-                                                    return [` ${context.raw} Projeto(s)`, ` Representa: ${porcentagem}%`];
-                                                }
-                                            }
-                                        }
-                                    },
-                                    cutout: '50%'
+                        dadosFiltrados.forEach(row => {
+                            let tramiteStr = '';
+                            Object.keys(row).forEach(c => {
+                                let cUp = c.toUpperCase();
+                                if(cUp === 'TRÂMITE NA CÂMARA'){
+                                    tramiteStr += ' ' + (typeof row[c] === 'object' ? String(row[c]?.text || '') : String(row[c] || ''));
                                 }
                             });
-                        }
-                    });
+                            tramiteStr = tramiteStr.toLowerCase();
+                            if(tramiteStr.includes('deliberação') || tramiteStr.includes('deliberacao')) faseVal[0]++;
+                            if(tramiteStr.includes('1ª discussão') || tramiteStr.includes('1a discussão') || tramiteStr.includes('1º') || tramiteStr.includes('1°')) faseVal[1]++;
+                            if(tramiteStr.includes('2ª discussão') || tramiteStr.includes('2a discussão') || tramiteStr.includes('2º') || tramiteStr.includes('2°')) faseVal[2]++;
+                        });
+                        new Chart(canvasFase.getContext('2d'), {
+                            type: 'pie',
+                            data: {
+                                labels: ['Deliberação', '1ª Discussão', '2ª Discussão'],
+                                datasets: [{
+                                    data: faseVal,
+                                    backgroundColor: ['#fb923c', '#a855f7', '#6366f1'],
+                                    borderWidth: 2, borderColor: '#ffffff'
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: {font:{size:10}} } } }
+                        });
+                    }
+                });
 
-                }
+                // Clica no primeiro menu por padrão
+                const primeiroLink = document.querySelector('.nav-link');
+                if (primeiroLink) { primeiroLink.click(); }
+
             } catch (erro) {
-                console.error("Fetch Execution Error:", erro);
-                
-                let mensagemAjuda = "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
-                if (erro.message.includes("Failed to fetch") || erro.name === "TypeError") {
-                    mensagemAjuda = "Acesso aos dados foi restrito ou o serviço está temporariamente indisponível. Contate o administrador do sistema.";
-                }
-
+                console.error("Erro interno do Painel:", erro);
                 document.getElementById('conteiner-secoes').innerHTML = `
-                    <div class="text-center p-10 card w-full max-w-2xl mx-auto mt-10 shadow-lg border-t-4 border-red-500">
-                        <i class="fa-solid fa-server text-red-500 text-5xl mb-4"></i>
-                        <h2 class="text-xl font-bold text-navy uppercase tracking-widest">Falha de Sincronização</h2>
-                        <p class="text-gray-600 mt-2 text-sm">${mensagemAjuda}</p>
+                    <div class="text-center p-10 card w-full bg-red-50 border-red-200 max-w-lg mx-auto">
+                        <i class="fa-solid fa-triangle-exclamation text-red-500 text-5xl mb-4"></i>
+                        <h2 class="text-xl font-bold text-red-900">Falha de Conexão</h2>
+                        <p class="text-red-700 mt-2 text-sm">Não foi possível carregar os dados seguros da nuvem. Verifique a URL do Google Apps Script e tente atualizar a página.</p>
                     </div>
                 `;
             }
